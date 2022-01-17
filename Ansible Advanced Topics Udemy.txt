@@ -1,0 +1,197 @@
+******************************************Inventory************************************************************
+Katakoda
+yaml lint.com
+linter-js-yaml --> atom ide --> Use command prompt and install this: apm install linter-js-yaml
+remote-sync --> it sync all the from vm to controller: apm install remote-sync
+
+*	Inventory file: all the hosts defined in inventory file. If we doesn't define any host then it takes local-host as default.
+*	idempotency: An operation is idempotent if the result of performing it once is exactly the same as the result of performing it repeatedly without any intervening actions.
+*	lineinfile: Search for a line in file and replace it or add it if it doesn't exist. [example: add a new server to the resolv.conf file if the server name exists it quits else it adds to the file, if we run it multiple time it just replaces that but it will not create multiple files]
+*	wildcard character * to replace ‘all’ argument.
+
+****************************************************Static and Dynamic Inventory**************************************************
+ A static inventory file is a plain text file containing a list of managed hosts or remote nodes whose numbers and IP addresses remain fairly constant.
+On the other hand, a dynamic host file keeps changing as you add new hosts or decommission old ones. The IP addresses of hosts are also dynamic as you stop and start new host systems.
+********************************************************************************************************************************************************************
+
+Parameters:
+alias
+ansible_host
+ansible_connection
+ansible_ssh_pass
+ansible_password
+ansible_user
+
+Group in Group:
+[Parent_Group_Name:Children_Name]
+
+
+************************************************Yaml****************************************************************
+> It's is text file or configuration file.
+
+* Difference b/w Key and Value/List and Arrays/Dictionary and Map.
+Fruit: Apple
+Sports: Football
+Here Fruit and Sports are the Key, And Apple, Football are the Values.
+
+Dictionary are unordered
+Lists are ordered.
+
+# --> Comments
+
+********************************************Playbooks*****************************************************************
+* Inventory file: all the hosts defined in inventory file. If we doesn't define any host then it takes local-host as default.
+* Modules: the different actions run by the tasks is called modules.
+	command, script, yum, service are some of the ansible modules.
+> To know more about modules we can use: ansible-doc -l
+> To execute a ansible playbook: ansible-playbook playbook.yml
+> To get/know the details of playbook: ansible-playbook --help 
+
+*********************************************Modules*************************************************************************
+> It is categories into many types:
+System, Commands, Files, Database, Cloud, Windows
+
+*********************************************Variables***************************************************************************
+> It stores data of  various values of different items like hostnames, usernames & passwords. If there are 100 servers all the data are stored in variables.
+> The format we are using in defining variable in playbooks like '{{ }}' is called jinja 2 template.
+
+*****************************Conditional & Conditional in Loop**********************************************
+> We have to use == in checking conditional statement.
+> Operator ( or ) is used in checking when condition. where it has to satisfy one condition.
+> Operator ( and ) is used to satisfy both the condition.
+> Example for (when) condition: double quotes and single quote.
+
+    name: 'Execute a script on all web server nodes'
+    hosts: all_servers
+    tasks:
+        -
+            service: 'name=mysql state=started'
+            when: 'ansible_host=="server4.company.com"'
+
+    name: 'Am I an Adult or a Child?'
+    hosts: localhost
+    vars:
+        age: 25
+    tasks:
+        -
+            command: 'echo "I am a Child"'
+            when: 'age < 18'
+        -
+            command: 'echo "I am an Adult"'
+            when: 'age >=18'
+> register module: Both shell and command module are same but the shell module runs in only given shell it uses >>
+    name: 'Add name server entry if not already entered'
+    hosts: localhost
+    tasks:
+        -
+            shell: 'cat /etc/resolv.conf'
+            register: command_output
+        -
+            shell: 'echo "nameserver 10.0.250.10" >> /etc/resolv.conf'
+            when: 'command_output.stdout.find("10.0.250.10") == -1'
+
+**********************************************Loops or With_items**********lookups*********************************************************************
+> loop and with_items both are same previosuly with_items are used now loop module is using.
+> with_* 
+In * we have file, items, url, mongodb,password, pipe, rabbitmq and so on this are called lookups.
+> lookups: are nothing but it reads the files urls whatever we mention there.
+    name: 'Print list of fruits'
+    hosts: localhost
+    vars:
+        fruits:
+            - Apple
+            - Banana
+            - Grapes
+            - Orange
+    tasks:
+        -
+            command: 'echo "{{item}}"'
+            with_items: '{{fruits}}'
+
+ - name: Install all required dependencies
+   host: db_server1, db_server2
+   tasks:
+     - name: install
+        apt: name={{item}} state=installed
+        with_items:
+	- python
+	- python-setuptools
+	- python-dev
+
+************************************************ROLES**************************************************************************
+Roles: are nothing but a package, where we assign some tasks like installing pre-requisites, packages, start and stop, configuration this bundle of package is stored in role.
+
+Purpose of roles:
+> To make your work reusable.
+> Roles also help in organise your code with in your ansible. It organizes all TASK in TASK directory. All variable use in task to VARS directory. Any defaults values goes inti DEFAULT directory. Handlers goes into HANDLERS directory any templates used by it goes into TEMPLATES directory. We can share this code in ansible community like Ansible GALAXY
+
+********************************************************PATTERNS**********************************************************************
+Patterns: targeting hosts and groups.
+Patterns let you run commands and playbooks against specific hosts and/or groups in your inventory. An Ansible pattern can refer to a single host, an IP address, an inventory group, a set of groups, or all hosts in your inventory. Patterns are highly flexible - you can exclude or require subsets of hosts, use wildcards or regular expressions, and more. Ansible executes on all inventory hosts included in the pattern.
+******************************************************File Separation***********************************************************************
+It is used to keep variables separate from main file. All the hotcoded values are kept separately in vars file.
+
+******************************************************Include********************************************************************************
+It is used to represent the var files in different floder like if to files exits of web.vars and db.vars. In the Playbook in tasks section we include (include) parameter here.
+
+tasks:
+ - include: web.var
+ - include: db.var
+
+********************************************JINJA2 TEMPLATE*************************************************************************
+> Correct formats: '{{ variable }}'  Wrong format: {{ variable }}
+> Another type format where something is defined before jinja2 template: source:  something {{ variable }} something (It is also correct format).
+
+******************************************************Errors in Ansible*****************************************************************
+> Bad indentation of a mapping entry.
+
+
+
+
+
+***********************************************Commands for Ansible**********************************************************************
+
+> To verify the connection b/w Controller and the Target1: ansible target1 -m ping
+> To verify the connection b/w Controller and all the Target servers: ansible all -m ping [all(host) - list of target machines]{the (all) group is created default by ansible itself}
+> To run a ansible playbook: ansible-playbook playbook.yml
+> If a inventory file is created in a folder inventory.txt then to run that inventory file we use: ansible all -m ping -i invenoty.txt
+> Commands for referencing the host inventory file: 
+	ansible {host-pattern} -i /path/of/inventory/file --list-hosts
+	ansible all -i /root/test_labs/hosts --list-hosts
+   wildcard character * to replace ‘all’ argument
+	ansible * -i /root/test_labs/hosts --list-hosts
+> To retrieve information about the hosts inside a dynamic inventory script simply run: ./script --list 
+
+
+******************************************Commands for Docker******************************************************************************
+> Check the running docker containers: docker ps
+> Download the image from docker pvt repo: docker run -itd venky/ubuntu-ssh-enabled
+> Identify the internal ip and details: docker inspect contid
+> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
